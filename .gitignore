@@ -1,3 +1,6 @@
 #training files
 trainvalues/
+testvalues/
+trainvaluesfixed/
+testvaluesfixed/
 __pycache__/

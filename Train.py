@@ -31,10 +31,17 @@ reverse_dict = {
 }
 
 # Build a Keras model given some parameters
+# model depth * module size = number of times we do the inner J loop
+#
+#keras.layers.Conv2D(32*2**min(i, 3) -> scales the number of channels each I loop in 2^min(i,3), so we have 32, then 64, then 128, then 256 (1,2,4,8) as i goes from 
+#                                       0 to model_depth-1, after i>3, will do 256 every time afterwards
+#and each J loop does each scale factor #module_size times, so 2 times for 32,64,128,256 with module_size=2, model_depth=5
+#
 def create_model(captcha_length, captcha_num_symbols, input_shape, model_depth=5, module_size=2):
   input_tensor = keras.Input(input_shape)
   x = input_tensor
   for i, module_length in enumerate([module_size] * model_depth):
+      print(f'module length is {module_length}, module size is {[module_size] * model_depth}, i = {i}')
       for j in range(module_length):
           x = keras.layers.Conv2D(32*2**min(i, 3), kernel_size=3, padding='same', kernel_initializer='he_uniform')(x)
           x = keras.layers.BatchNormalization()(x)
@@ -46,6 +53,7 @@ def create_model(captcha_length, captcha_num_symbols, input_shape, model_depth=5
   model = keras.Model(inputs=input_tensor, outputs=x)
 
   return model
+
 
 # A Sequence represents a dataset for training in Keras
 # In this case, we have a folder full of images
@@ -69,9 +77,13 @@ class ImageSequence(keras.utils.Sequence):
 
     def __getitem__(self, idx):
         X = numpy.zeros((self.batch_size, self.captcha_height, self.captcha_width, 3), dtype=numpy.float32)
+
+        #captcha ch (6), batch size (32), captcha length (44)
         y = [numpy.zeros((self.batch_size, len(self.captcha_symbols)), dtype=numpy.uint8) for i in range(self.captcha_length)]
 
-        print(f'remaining files is {len(self.files.keys())}')
+
+
+        #print(f'remaining files is {len(self.files.keys())}')
         for i in range(self.batch_size):
             if len(self.files.keys()) > 0:
                 random_image_label = random.choice(list(self.files.keys()))
@@ -89,8 +101,6 @@ class ImageSequence(keras.utils.Sequence):
 
                 random_image_label = filename_format(reverse_dict, random_image_label)
 
-               
-
                 for j, ch in enumerate(random_image_label):
 
                     #print(f'j = {j}, character = {ch}') #debugging
@@ -98,7 +108,7 @@ class ImageSequence(keras.utils.Sequence):
                     y[j][i, :] = 0
                     y[j][i, self.captcha_symbols.find(ch)] = 1
 
-                    #print(y)
+                    #print(len(y))
 
             else:
                 exit
@@ -117,7 +127,7 @@ def filename_format(dictionary, filename):
 
     return filename
 
-#python3 Train.py  --width=128 --height=64 --length=6 --batch-size=32 --epochs=4 --train-dataset='trainvalues/' --validate-dataset='trainvalues/' --output-model-name='test1' --symbols='symbols.txt'
+#python3 Train.py  --width=128 --height=64 --length=6 --batch-size=32 --epochs=100 --train-dataset='trainvalues/' --validate-dataset='testvalues/' --output-model-name='test1' --symbols='symbols.txt'
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--width', help='Width of captcha image', type=int)
@@ -216,21 +226,25 @@ def main():
             model.save_weights(args.output_model_name+'_resume.h5')
 
 if __name__ == '__main__':
-   main()
+   #main()
+    #my tests
+    train_dataset = 'trainvaluesfixed'
+    batch_size = 32
+    length = 6
+    symbols = '#%+-0123456789:ABDFMPQRTUVWXYZ[\]ceghjkns{\}'
 
 
-    # #my tests
-    # train_dataset = 'trainvalues'
-    # batch_size = 32
-    # length = 6
-    # symbols = '#%+-0123456789:ABDFMPQRTUVWXYZ[\]ceghjkns{\}'
+    #array[captcha_length_index][batch_num][symbols_index]
+
+    trainX, trainY = ImageSequence(train_dataset, batch_size, length, symbols, 128, 64).__getitem__(0)
+
+    print((trainY))  #first character has 32 rows of size 44, each one has 44 one-hot encodings
 
 
-    # #array[captcha_length_index][batch_num][symbols_index]
+    #we want 2000 y values, for each one we have 5 captcha values with a single one hot encoding
 
-    # trainX, trainY = ImageSequence(train_dataset, batch_size, length, symbols, 128, 64).getitem()
-
-    # #prints first
+    #model = create_model(length, len(symbols), (64, 128, 3))
+    #prints first
     # for i in range(len(trainY)):
 
     #     print(trainY[i][0])
