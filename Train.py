@@ -64,13 +64,14 @@ class ImageSequence(keras.utils.Sequence):
         self.used_files = []
         self.count = len(file_list)
 
-    def len(self):
+    def __len__(self):
         return int(numpy.floor(self.count / self.batch_size))
 
-    def getitem(self):
+    def __getitem__(self, idx):
         X = numpy.zeros((self.batch_size, self.captcha_height, self.captcha_width, 3), dtype=numpy.float32)
         y = [numpy.zeros((self.batch_size, len(self.captcha_symbols)), dtype=numpy.uint8) for i in range(self.captcha_length)]
 
+        print(f'remaining files is {len(self.files.keys())}')
         for i in range(self.batch_size):
             if len(self.files.keys()) > 0:
                 random_image_label = random.choice(list(self.files.keys()))
@@ -86,39 +87,37 @@ class ImageSequence(keras.utils.Sequence):
                 processed_data = numpy.array(rgb_data) / 255.0
                 X[i] = processed_data
 
-                # We have a little hack here - we save captchas as TEXT_num.png if there is more than one captcha with the text "TEXT"
-                # So the real label should have the "_num" stripped out.
-
-
                 random_image_label = filename_format(reverse_dict, random_image_label)
 
-                print(f'remaining files is {len(self.files.keys())}, current file = {random_image_label}')
+               
 
                 for j, ch in enumerate(random_image_label):
 
-                   #print(f'j = {j}, character = {ch}') #debugging
+                    #print(f'j = {j}, character = {ch}') #debugging
 
                     y[j][i, :] = 0
                     y[j][i, self.captcha_symbols.find(ch)] = 1
 
+                    #print(y)
+
             else:
-                break
+                exit
 
         return X, y
 
 # converts the filename back to character form
 def filename_format(dictionary, filename):
 
-    print(f'The image label is: {filename}\n')
+    #print(f'The image label is: {filename}\n')
 
     for key in dictionary:
         filename = filename.replace(key, dictionary[key])
 
-    print(f'The new image label is: {filename}\n')
+    #print(f'The new image label is: {filename}\n')
 
     return filename
 
-
+#python3 Train.py  --width=128 --height=64 --length=6 --batch-size=32 --epochs=4 --train-dataset='trainvalues/' --validate-dataset='trainvalues/' --output-model-name='test1' --symbols='symbols.txt'
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--width', help='Width of captcha image', type=int)
@@ -133,102 +132,107 @@ def main():
     parser.add_argument('--symbols', help='File with the symbols to use in captchas', type=str)
     args = parser.parse_args()
 
-    # if args.width is None:
-    #     print("Please specify the captcha image width")
-    #     exit(1)
+    if args.width is None:
+        print("Please specify the captcha image width")
+        exit(1)
 
-    # if args.height is None:
-    #     print("Please specify the captcha image height")
-    #     exit(1)
+    if args.height is None:
+        print("Please specify the captcha image height")
+        exit(1)
 
-    # if args.length is None:
-    #     print("Please specify the captcha length")
-    #     exit(1)
+    if args.length is None:
+        print("Please specify the captcha length")
+        exit(1)
 
-    # if args.batch_size is None:
-    #     print("Please specify the training batch size")
-    #     exit(1)
+    if args.batch_size is None:
+        print("Please specify the training batch size")
+        exit(1)
 
-    # if args.epochs is None:
-    #     print("Please specify the number of training epochs to run")
-    #     exit(1)
+    if args.epochs is None:
+        print("Please specify the number of training epochs to run")
+        exit(1)
 
-    # if args.train_dataset is None:
-    #     print("Please specify the path to the training data set")
-    #     exit(1)
+    if args.train_dataset is None:
+        print("Please specify the path to the training data set")
+        exit(1)
 
-    # if args.validate_dataset is None:
-    #     print("Please specify the path to the validation data set")
-    #     exit(1)
+    if args.validate_dataset is None:
+        print("Please specify the path to the validation data set")
+        exit(1)
 
-    # if args.output_model_name is None:
-    #     print("Please specify a name for the trained model")
-    #     exit(1)
+    if args.output_model_name is None:
+        print("Please specify a name for the trained model")
+        exit(1)
 
-    # if args.symbols is None:
-    #     print("Please specify the captcha symbols file")
-    #     exit(1)
+    if args.symbols is None:
+        print("Please specify the captcha symbols file")
+        exit(1)
 
-    #my tests
-    train_dataset = 'trainvalues'
-    batch_size = 32
-    length = 5
-    symbols = 'symbols.txt'
-
-
-    trainX, trainY = ImageSequence(train_dataset, batch_size, length, symbols, 128, 64).getitem()
-
-
-    print(trainX)
-    print(numpy.shape(trainX))
+ 
 
     #X values are a single batch of size batch_size, they contain the rgb of each pixel for a 128 x 64 size image, so there are
 
+    captcha_symbols = None
+    with open(args.symbols) as symbols_file:
+        captcha_symbols = symbols_file.readline()
 
+    # physical_devices = tf.config.experimental.list_physical_devices('GPU')
+    # assert len(physical_devices) > 0, "No GPU available!"
+    # tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
+    with tf.device('/device:GPU:0'):
+    #with tf.device('/device:CPU:0'):
+    # with tf.device('/device:XLA_CPU:0'):
+        model = create_model(args.length, len(captcha_symbols), (args.height, args.width, 3))
 
-    # captcha_symbols = None
-    # with open(args.symbols) as symbols_file:
-    #     captcha_symbols = symbols_file.readline()
+        if args.input_model is not None:
+            model.load_weights(args.input_model)
 
-    # # physical_devices = tf.config.experimental.list_physical_devices('GPU')
-    # # assert len(physical_devices) > 0, "No GPU available!"
-    # # tf.config.experimental.set_memory_growth(physical_devices[0], True)
+        model.compile(loss='categorical_crossentropy',
+                      optimizer=keras.optimizers.Adam(1e-3, amsgrad=True),
+                      metrics=['accuracy'])
 
-    # # with tf.device('/device:GPU:0'):
-    # with tf.device('/device:CPU:0'):
-    # # with tf.device('/device:XLA_CPU:0'):
-    #     model = create_model(args.length, len(captcha_symbols), (args.height, args.width, 3))
+        model.summary()
 
-    #     if args.input_model is not None:
-    #         model.load_weights(args.input_model)
+        training_data = ImageSequence(args.train_dataset, args.batch_size, args.length, captcha_symbols, args.width, args.height)
+        validation_data = ImageSequence(args.validate_dataset, args.batch_size, args.length, captcha_symbols, args.width, args.height)
 
-    #     model.compile(loss='categorical_crossentropy',
-    #                   optimizer=keras.optimizers.Adam(1e-3, amsgrad=True),
-    #                   metrics=['accuracy'])
+        callbacks = [keras.callbacks.EarlyStopping(patience=3),
+                     # keras.callbacks.CSVLogger('log.csv'),
+                     keras.callbacks.ModelCheckpoint(args.output_model_name+'.h5', save_best_only=False)]
 
-    #     model.summary()
+        # Save the model architecture to JSON
+        with open(args.output_model_name+".json", "w") as json_file:
+            json_file.write(model.to_json())
 
-    #     training_data = ImageSequence(args.train_dataset, args.batch_size, args.length, captcha_symbols, args.width, args.height)
-    #     validation_data = ImageSequence(args.validate_dataset, args.batch_size, args.length, captcha_symbols, args.width, args.height)
-
-    #     callbacks = [keras.callbacks.EarlyStopping(patience=3),
-    #                  # keras.callbacks.CSVLogger('log.csv'),
-    #                  keras.callbacks.ModelCheckpoint(args.output_model_name+'.h5', save_best_only=False)]
-
-    #     # Save the model architecture to JSON
-    #     with open(args.output_model_name+".json", "w") as json_file:
-    #         json_file.write(model.to_json())
-
-    #     try:
-    #         model.fit_generator(generator=training_data,
-    #                             validation_data=validation_data,
-    #                             epochs=args.epochs,
-    #                             callbacks=callbacks,
-    #                             use_multiprocessing=True)
-    #     except KeyboardInterrupt:
-    #         print('KeyboardInterrupt caught, saving current weights as ' + args.output_model_name+'_resume.h5')
-    #         model.save_weights(args.output_model_name+'_resume.h5')
+        try:
+            model.fit_generator(generator=training_data,
+                                validation_data=validation_data,
+                                epochs=args.epochs,
+                                callbacks=callbacks,
+                                use_multiprocessing=True)
+        except KeyboardInterrupt:
+            print('KeyboardInterrupt caught, saving current weights as ' + args.output_model_name+'_resume.h5')
+            model.save_weights(args.output_model_name+'_resume.h5')
 
 if __name__ == '__main__':
    main()
+
+
+    # #my tests
+    # train_dataset = 'trainvalues'
+    # batch_size = 32
+    # length = 6
+    # symbols = '#%+-0123456789:ABDFMPQRTUVWXYZ[\]ceghjkns{\}'
+
+
+    # #array[captcha_length_index][batch_num][symbols_index]
+
+    # trainX, trainY = ImageSequence(train_dataset, batch_size, length, symbols, 128, 64).getitem()
+
+    # #prints first
+    # for i in range(len(trainY)):
+
+    #     print(trainY[i][0])
+
+    # print(numpy.shape(trainY))
