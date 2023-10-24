@@ -80,8 +80,7 @@ class ImageSequence(keras.utils.Sequence):
 
         #captcha ch (6), batch size (32), captcha length (44)
         y = [numpy.zeros((self.batch_size, len(self.captcha_symbols)), dtype=numpy.uint8) for i in range(self.captcha_length)]
-
-
+        # captcha_length
 
         #print(f'remaining files is {len(self.files.keys())}')
         for i in range(self.batch_size):
@@ -101,9 +100,8 @@ class ImageSequence(keras.utils.Sequence):
 
                 random_image_label = filename_format(reverse_dict, random_image_label)
 
+                # for each character, y[character index], 
                 for j, ch in enumerate(random_image_label):
-
-                    #print(f'j = {j}, character = {ch}') #debugging
 
                     y[j][i, :] = 0
                     y[j][i, self.captcha_symbols.find(ch)] = 1
@@ -226,27 +224,27 @@ def main():
             model.save_weights(args.output_model_name+'_resume.h5')
 
 if __name__ == '__main__':
-   #main()
-    #my tests
-    train_dataset = 'trainvaluesfixed'
-    batch_size = 32
-    length = 6
-    symbols = '#%+-0123456789:ABDFMPQRTUVWXYZ[\]ceghjkns{\}'
+   main()
+    # #my tests
+    # train_dataset = 'trainvaluesfixed'
+    # batch_size = 32
+    # length = 6
+    # symbols = '#%+-0123456789:ABDFMPQRTUVWXYZ[\]ceghjkns{\}'
 
 
-    #array[captcha_length_index][batch_num][symbols_index]
+    # #array[captcha_length_index][batch_num][symbols_index]
 
-    trainX, trainY = ImageSequence(train_dataset, batch_size, length, symbols, 128, 64).__getitem__(0)
+    # trainX, trainY = ImageSequence(train_dataset, batch_size, length, symbols, 128, 64).__getitem__(0)
 
-    print((trainY))  #first character has 32 rows of size 44, each one has 44 one-hot encodings
+    # print((trainY[0][0]))  #first character has 32 rows of size 44, each one has 44 one-hot encodings
 
 
-    #we want 2000 y values, for each one we have 5 captcha values with a single one hot encoding
+    # #we want 2000 y values, for each one we have 5 captcha values with a single one hot encoding
 
-    #model = create_model(length, len(symbols), (64, 128, 3))
-    #prints first
-    # for i in range(len(trainY)):
+    # #model = create_model(length, len(symbols), (64, 128, 3))
+    # #prints first
+    # # for i in range(len(trainY)):
 
-    #     print(trainY[i][0])
+    # #     print(trainY[i][0])
 
-    # print(numpy.shape(trainY))
+    # # print(numpy.shape(trainY))

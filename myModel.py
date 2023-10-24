@@ -88,6 +88,8 @@ Attempt 1:
 
 '''
 
+# 1 2 3 4 5 6
+#[0,1,0,0,0,0]
 
 
 #each input needs to be a grayscale for each pixel, so width * height * 1
@@ -108,10 +110,17 @@ def preProcessData(directory, width, height, captcha_symbols):
     X = numpy.zeros((num_images, height, width, 1)) #num of images, of height and width, with value each (grayscale)
     y = numpy.zeros((num_images, captcha_length, 44))#we want to get for each image 5 rows with 1 columns so 2000*5*1, where the single column is one hot encoding of a single character
 
+
+    # 2000 * 64 * 128 (greyscale) 0-255
+
+
     # for j, ch in enumerate:
 
-    print(numpy.shape(y))
-    print((y[0][0]))
+    
+    #X[image_number][rows][columns][greyscale value]
+
+    print((X))
+    print(len(X))
 
     # for i in length:
 
