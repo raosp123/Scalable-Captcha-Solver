@@ -12,8 +12,28 @@ import random
 import argparse
 import tensorflow as tf
 import pandas as pd
+from tensorflow import keras
+from keras import layers, regularizers
+from keras.layers import Dense, Dropout, Activation, Flatten, BatchNormalization
+from keras.layers import Conv2D, MaxPooling2D, LeakyReLU
 #import tensorflow.keras as keras
 from tensorflow import keras 
+
+reverse_dict = {
+    'hash': '#',
+    'backslash': '\\',
+    'exclamation': '!',
+    'forwardslash': '/',
+    'lbrace': '{',
+    'rbrace': '}',
+    'pipe': '|',
+    'doublequote': '"',
+    'singlequote': "'",
+    'question': '?',
+    'at': '@',
+    'backtick': '`',
+    'colon': ':'
+}
 
 '''
 numpy printing cheat sheet.
@@ -56,7 +76,7 @@ Attempt 1:
         -> make a model for each character, so each model focuses on only one index in the captcha, we train the models with data that has at least the amount of characters
            that each model needs, e.g: a model that predicts the 3rd index of a captcha, needs to be trained on captchas of at least size 3, otherwise we are training it on blank space
 
-    MAIN TODO: see parts 1 and 2 here: https://medium.com/@oneironaut.oml/solving-captchas-with-deeplearning-part-2-single-character-classification-ac0b2d102c96
+    MAIN TODO: see parts 1 and 2 used as inspiration here (no code used from them): https://medium.com/@oneironaut.oml/solving-captchas-with-deeplearning-part-2-single-character-classification-ac0b2d102c96
         train a model to work to predict the first character, afterwards we move on to other indexes
 
     A. TODO 5 models for each character:
@@ -88,8 +108,6 @@ Attempt 1:
 
 '''
 
-# 1 2 3 4 5 6
-#[0,1,0,0,0,0]
 
 
 #each input needs to be a grayscale for each pixel, so width * height * 1
@@ -101,89 +119,87 @@ def preProcessData(directory, width, height, captcha_symbols):
 
     #create X and Y for train/testing
     captcha_length = 5
-    symbols_txt='symbols.txt'
-    symbols_length = 44
+
+
 
 
     num_images = (len([name for name in os.listdir('trainvaluesfixed')]))
 
-    X = numpy.zeros((num_images, height, width, 1)) #num of images, of height and width, with value each (grayscale)
+
+    X = numpy.zeros((num_images, height, width)) #num of images, of height and width, with value each (grayscale)
     y = numpy.zeros((num_images, captcha_length, 44))#we want to get for each image 5 rows with 1 columns so 2000*5*1, where the single column is one hot encoding of a single character
 
 
-    # 2000 * 64 * 128 (greyscale) 0-255
+    for i, file_label in enumerate(files):
+        
+        file = files[file_label] 
+        file_label = filename_format(reverse_dict, file_label)
+
+        raw_data = cv2.imread(os.path.join(directory, file))
+        gray_data = cv2.cvtColor(raw_data, cv2.COLOR_BGR2GRAY)
+
+        #print(gray_data[0][0])
+
+        # print(X[i][0])
+        # print(gray_data[0])
 
 
-    # for j, ch in enumerate:
+        X[i] = gray_data
 
+        for j, ch in enumerate(file_label):
+            #print(y[i][j, :])
+            y[i][j, captcha_symbols.find(ch)] = 1
+            #print(y[i][j])
+
+
+    #print(captcha_symbols.find('P'))
+    #print(list(files)[0])
+
+ 
+    #print(numpy.shape(y[0][0]))
+
+    return X, y
     
-    #X[image_number][rows][columns][greyscale value]
+# converts the filename back to character form
+def filename_format(dictionary, filename):
 
-    print((X))
-    print(len(X))
+    #print(f'The image label is: {filename}\n')
 
-    # for i in length:
+    for key in dictionary:
+        filename = filename.replace(key, dictionary[key])
 
-    #     X[]
+    #print(f'The new image label is: {filename}\n')
+
+    return filename
 
 
-    #print(f'X= {X}, shape = {numpy.shape(X)}, type = {type(X)}')
+def createModel(trainX, shape, num_classes):
+
+    model = keras.Sequential()
+    model.add(Conv2D(16, (3,3), padding='same', input_shape=shape, activation='relu'))
+    model.add(Conv2D(16, (3,3), padding='same', activation='relu'))
+    model.add(MaxPooling2D((2,2), strides=2))
+    model.add(Conv2D(32, (3,3), padding='same', activation='relu'))
+    model.add(Conv2D(32, (3,3), padding='same', activation='relu'))
+    model.add(MaxPooling2D((2,2), strides=2))
+    model.add(Dropout(0.5))
+    model.add(Flatten())
+    model.add(Dense(num_classes, activation='softmax',kernel_regularizer=regularizers.l1(0.0001)))
+    model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=["accuracy"])
+    model.summary()
+
+    return model
+
+def splitY(trainY, num_images, captcha_len):
+
+    trainYs = numpy.zeros((captcha_len, num_images, 44)) # there are 5 trainYs, the first one corresponds to 2000 images and the value for each character
     
-class ImageSequence(keras.utils.Sequence):
-    def __init__(self, directory_name, batch_size, captcha_length, captcha_symbols, captcha_width, captcha_height):
-        self.directory_name = directory_name
-        self.batch_size = batch_size
-        self.captcha_length = captcha_length
-        self.captcha_symbols = captcha_symbols
-        self.captcha_width = captcha_width
-        self.captcha_height = captcha_height
+    for i in range(captcha_len):
+        for j in range(num_images):
+            trainYs[i] = trainY[j][i]
 
-        file_list = os.listdir(self.directory_name)
-        self.files = dict(zip(map(lambda x: x.split('.')[0], file_list), file_list))
-        self.used_files = []
-        self.count = len(file_list)
+    return trainYs
 
-    def __len__(self):
-        return int(numpy.floor(self.count / self.batch_size))
-
-    def __getitem__(self, idx):
-        X = numpy.zeros((self.batch_size, self.captcha_height, self.captcha_width, 3), dtype=numpy.float32)
-        y = [numpy.zeros((self.batch_size, len(self.captcha_symbols)), dtype=numpy.uint8) for i in range(self.captcha_length)]
-
-        #print(f'remaining files is {len(self.files.keys())}')
-        for i in range(self.batch_size):
-            if len(self.files.keys()) > 0:
-                random_image_label = random.choice(list(self.files.keys()))
-                random_image_file = self.files[random_image_label]
-
-                # We've used this image now, so we can't repeat it in this iteration
-                self.used_files.append(self.files.pop(random_image_label))
-
-                # We have to scale the input pixel values to the range [0, 1] for
-                # Keras so we divide by 255 since the image is 8-bit RGB
-                raw_data = cv2.imread(os.path.join(self.directory_name, random_image_file))
-                rgb_data = cv2.cvtColor(raw_data, cv2.COLOR_BGR2RGB)
-                processed_data = numpy.array(rgb_data) / 255.0
-                X[i] = processed_data
-
-                random_image_label = filename_format(reverse_dict, random_image_label)
-
-               
-
-                for j, ch in enumerate(random_image_label):
-
-                    #print(f'j = {j}, character = {ch}') #debugging
-
-                    y[j][i, :] = 0
-                    y[j][i, self.captcha_symbols.find(ch)] = 1
-
-                    #print(y)
-
-            else:
-                exit
-
-        return X, y
-    
 
 if __name__ == '__main__':
    
@@ -191,4 +207,19 @@ if __name__ == '__main__':
     with open('symbols.txt') as symbols_file:
         captcha_symbols = symbols_file.readline()
 
-    preProcessData('trainvaluesfixed/', 128, 64, captcha_symbols)
+    file_list = os.listdir('trainvaluesfixed/')    
+
+    trainX, trainY = preProcessData('trainvaluesfixed/', 128, 64, captcha_symbols)
+    shape = (len(trainX[0]), len(trainX[0][0]), 1)
+
+    trainYs = splitY(trainY, num_images=len(trainX), captcha_len=5) #training X is the same for every model, but trainYs[0] is the output for the image predicions of the first character
+    
+    print(len(trainY))
+
+    #print(f'The input image is {trainX[0]} and the output associated is {trainYs[0][0]}')
+
+    first_model = createModel(trainX, shape, 44)
+
+    first_model.fit(trainX, trainYs[0], batch_size=32, epochs=2, validation_split=0.1)
+
+    first_model.save('model_ch1')
