@@ -16,10 +16,10 @@ from tensorflow import keras
 from keras import layers, regularizers
 from keras.layers import Dense, Dropout, Activation, Flatten, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D, LeakyReLU
-#import tensorflow.keras as keras
-from tensorflow import keras 
+
+
 import pandas as pd
-from keras.utils import to_categorical
+import keras.utils as to_categorical
 
 reverse_dict = {
     'hash': '#',
@@ -205,41 +205,31 @@ def splitY(trainY, num_images, captcha_len):
 
     return temp
 
+def smallerCaptchaArray():
+    X = []
+    y = []
+
+    for features, label in train[0]:
+            X.append(features)
+            y.append(label)
 
 
-if __name__ == '__main__':
-   
-    directory = 'test1'
+    X = numpy.array(X)
+    y = numpy.array(y)
 
-    with open('symbols.txt') as symbols_file:
-        captcha_symbols = symbols_file.readline()
+    Y= numpy.zeros((40000,45))
 
-    num_images = (len([name for name in os.listdir(directory)]))
+    print(y.shape)
+    #y_new = y.reshape(5,4000,44)
 
-    # file_list = os.listdir('trainvaluesfixed/')    
-    test = ['#','%','+','-','0','1','2','3','4','5','6','7','8','9',"'",':','A','B','D','F','M','P','Q','R','T','U','V','W','X','Y','Z','[','\\',']','c','e','g','h','j','k','n','s','{','}']
-
-    #print(test.index('\\'))
-    # trainX, trainY = preProcessData(directory, 128, 64, captcha_symbols)
-
-    # print(trainY.shape)
-
-    # trainYs = splitY(trainY, num_images=len(trainX), captcha_len=5)
-
-
-
-    # #trainY = trainY.reshape(num_images, 43 * 5)
-
-    # print(trainYs.shape)
-
-
-    train = trainingData(directory)
     
-    for i in range(len(train)): 
-        random.shuffle(train[i])
-    #print(train)
+    X.reshape(-1, 64, 128, 1)
+    Y = to_categorical(y)
 
-    #list of list implementation
+    print(Y.shape)
+    print(X.shape)
+
+def hugeCaptchaArray():
 
     X=[]
     y=[]
@@ -273,21 +263,57 @@ if __name__ == '__main__':
     #     print(Y[0])
     X=X.astype('float32')
 
-
-
-    
     shape = (len(X[0][0]), len(X[0][0][0]), 1)
 
-    print(shape)
+if __name__ == '__main__':
+   
+    directory = 'test1'
+
+    with open('symbols.txt') as symbols_file:
+        captcha_symbols = symbols_file.readline()
+
+    num_images = (len([name for name in os.listdir(directory)]))
+
+    # file_list = os.listdir('trainvaluesfixed/')    
+    test = ['#','%','+','-','0','1','2','3','4','5','6','7','8','9',"'",':','A','B','D','F','M','P','Q','R','T','U','V','W','X','Y','Z','[','\\',']','c','e','g','h','j','k','n','s','{','}']
+
+    #print(test.index('\\'))
+    # trainX, trainY = preProcessData(directory, 128, 64, captcha_symbols)
+
+    # print(trainY.shape)
+
+    # trainYs = splitY(trainY, num_images=len(trainX), captcha_len=5)
+
+
+
+    # #trainY = trainY.reshape(num_images, 43 * 5)
+
+    # print(trainYs.shape)
+
+    train = trainingData(directory)
+    
+    for i in range(len(train)): 
+        random.shuffle(train[i])
+    #print(train)
+
+    #list of list implementation
+
+    smallerCaptchaArray()
+
+    # print(shape)
+
+    # X=X.astype('float32')
+
+    # shape = (len(X[0][0]), len(X[0][0][0]), 1)
     # # #print(f'The input image is {trainX[0]} and the output associated is {trainYs[0][0]}')
 
-    first_model = createModel(X[0], shape, 45)
-    print(Y[0].shape)
-    print(X[0].shape)
-    # second_model = create_model(5, 43, shape)
-    batch_size = 64
+    # first_model = createModel(X[0], shape, 45)
+    # print(Y[0].shape)
+    # print(X[0].shape)
+    # # second_model = create_model(5, 43, shape)
+    # batch_size = 64
 
 
-    first_model.fit(X[0], Y[0], epochs=20, batch_size=batch_size, validation_split=0.2)
+    # first_model.fit(X[0], Y[0], epochs=20, batch_size=batch_size, validation_split=0.2)
 
-    first_model.save('please_work.h5')
+    # first_model.save('please_work.h5')

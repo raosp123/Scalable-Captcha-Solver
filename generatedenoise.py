@@ -81,7 +81,7 @@ def main():
         num_images = sum(1 for _ in os.scandir(args.output_dir) if _.is_file())
         
         if num_images < args.count:
-            length = 5 #random.randint(1,6) #uncomment if you want range of lengths
+            length = random.randint(1,6) #uncomment if you want range of lengths
             random_str = ''.join([random.choice(captcha_symbols) for j in range(length)])
             im = captcha_generator.generate_image(random_str)
             image1 = numpy.array(im[0])
