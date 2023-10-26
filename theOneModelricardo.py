@@ -61,7 +61,7 @@ def trainingData(directory):
         # print(X[i][0])
         # print(gray_data[0])
         h = 0
-        while h < 5:
+        while h < 6:
             if h < (len(file_label)-1):
                 for j, ch in enumerate(file_label):
                     #print(y[i][j, :])
@@ -234,7 +234,9 @@ if __name__ == '__main__':
 
 
     train = trainingData(directory)
-    random.shuffle(train)
+    
+    for i in range(len(train)): 
+        random.shuffle(train[i])
     #print(train)
 
     #list of list implementation
@@ -251,8 +253,10 @@ if __name__ == '__main__':
             X[i].append(features)
             y[i].append(label)
 
-
-    print(numpy.array(X).shape)
+    for i in range(len(train)):
+        print(len(X[i]))
+        
+    #print(numpy.array(X).shape)
   
     X = numpy.array(X)
     y = numpy.array(y)
