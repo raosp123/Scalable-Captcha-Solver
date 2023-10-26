@@ -123,7 +123,7 @@ def preProcessData(directory, width, height, captcha_symbols):
 
 
 
-    num_images = (len([name for name in os.listdir('char2')]))
+    num_images = (len([name for name in os.listdir('fixed4k')]))
 
 
     X = numpy.zeros((num_images, height, width)) #num of images, of height and width, with value each (grayscale)
@@ -215,19 +215,22 @@ if __name__ == '__main__':
     with open('symbols.txt') as symbols_file:
         captcha_symbols = symbols_file.readline()
 
-    file_list = os.listdir('char2')    
+    file_list = os.listdir('fixed4k')    
 
-    trainX, trainY = preProcessData('char2', 128, 64, captcha_symbols)
+    trainX, trainY = preProcessData('fixed4k', 128, 64, captcha_symbols)
     shape = (len(trainX[0]), len(trainX[0][0]), 1)
 
     trainYs = splitY(trainY, num_images=len(trainX), captcha_len=5) #training X is the same for every model, but trainYs[0] is the output for the image predicions of the first character
     
-    print(trainYs[0].shape)
+    #print(trainYs[0].shape)
 
     #print(f'The input image is {trainX[0]} and the output associated is {trainYs[0][0]}')
 
     first_model = createModel(trainX, shape, 44)
 
+    print(trainYs[0].shape)
+    print(trainX.shape)
+
     first_model.fit(trainX, trainYs[0], batch_size=40, epochs=2, validation_split=0.1)
 
-    first_model.save('model_ch1.h5')
+    #first_model.save('model_ch1.h5')

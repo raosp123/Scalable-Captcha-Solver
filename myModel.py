@@ -220,6 +220,8 @@ if __name__ == '__main__':
 
     first_model = createModel(trainX, shape, 44)
 
+
+
     first_model.fit(trainX, trainYs[0], batch_size=32, epochs=2, validation_split=0.1)
 
     first_model.save('model_ch1')
