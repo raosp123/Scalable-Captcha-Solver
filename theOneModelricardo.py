@@ -39,7 +39,7 @@ reverse_dict = {
 
 def trainingData(directory):
 
-    categories = ['#','%','+','-','0','1','2','3','4','5','6','7','8','9',"'",':','A','B','D','F','M','P','Q','R','T','U','V','W','X','Y','Z','[','\\',']','c','e','g','h','j','k','n','s','{','}']
+    categories = ['#','%','+','-','0','1','2','3','4','5','6','7','8','9',"'",':','A','B','D','F','M','P','Q','R','T','U','V','W','X','Y','Z','[','\\',']','c','e','g','h','j','k','n','s','{','}','&']
     file_list = os.listdir(directory) #list of files in directory
     files = dict(zip(map(lambda x: x.split('.')[0], file_list), file_list))
 
@@ -60,11 +60,17 @@ def trainingData(directory):
 
         # print(X[i][0])
         # print(gray_data[0])
-
-        for j, ch in enumerate(file_label):
-            #print(y[i][j, :])
-            train[j].append([gray_data, categories.index(ch)])
-            #print(y[i][j])
+        h = 0
+        while h < 5:
+            if h < (len(file_label)-1):
+                for j, ch in enumerate(file_label):
+                    #print(y[i][j, :])
+                    train[j].append([gray_data, categories.index(ch)])
+                    h = h +1
+                    #print(y[i][j])
+            else:
+                train[h].append([gray_data, 44])
+                h = h+1
 
     return train
 
@@ -251,7 +257,7 @@ if __name__ == '__main__':
     X = numpy.array(X)
     y = numpy.array(y)
 
-    Y= numpy.zeros((6,40000,44))
+    Y= numpy.zeros((6,40000,45))
     print(y.shape)
     #y_new = y.reshape(5,4000,44)
 
@@ -271,7 +277,7 @@ if __name__ == '__main__':
     print(shape)
     # # #print(f'The input image is {trainX[0]} and the output associated is {trainYs[0][0]}')
 
-    first_model = createModel(X[0], shape, 44)
+    first_model = createModel(X[0], shape, 45)
     print(Y[0].shape)
     print(X[0].shape)
     # second_model = create_model(5, 43, shape)
