@@ -68,8 +68,8 @@ def main():
     captcha_generator = imagedenoise.ImageCaptcha(width=args.width, height=args.height, fonts=[args.fontpath])
     
     
-    high = (args.captcha_range).split(",")[0]
-    low = (args.captcha_range).split(",")[1]
+    high = int((args.captcha_range).split(",")[0])
+    low = int((args.captcha_range).split(",")[1])
 
     symbols_file = open(args.symbols, 'r')
     captcha_symbols = symbols_file.readline().strip()
