@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--output-dir', help='Where to store the generated captchas', type=str)
     parser.add_argument('--symbols', help='File with the symbols to use in captchas', type=str)
     parser.add_argument('--fontpath', help='Path where the font style is saved', type=str)
-    parser.add_argument('--captcha-length', help='length of captcha, default is random(1,6)', type=str)
+    parser.add_argument('--captcha-range', help='range of captcha you define (x,y)', type=str)
     args = parser.parse_args()
 
     if args.width is None:
@@ -59,7 +59,9 @@ def main():
         print("Please specify the path of the fonts file")
         exit(1)
 
-
+    if args.captha_range is None:
+        print("Please specify the captcha range, in format (x,y)")
+        exit(1)
 
     captcha_generator = imagedenoise.ImageCaptcha(width=args.width, height=args.height, fonts=[args.fontpath])
     
@@ -81,7 +83,7 @@ def main():
         num_images = sum(1 for _ in os.scandir(args.output_dir) if _.is_file())
         
         if num_images < args.count:
-            length = random.randint(1,6) #uncomment if you want range of lengths
+            length = random.randint(args.captcha_range) #uncomment if you want range of lengths
             random_str = ''.join([random.choice(captcha_symbols) for j in range(length)])
             im = captcha_generator.generate_image(random_str)
             image1 = numpy.array(im[0])
