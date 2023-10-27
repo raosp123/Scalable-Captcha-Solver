@@ -53,12 +53,15 @@ def main():
         exit(1)
 
     def number_characters(model, image):
-        image = cv2.imread(image)
+        image = cv2.imread(os.path.join(args.filespath,image))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image = image / 255.0
         
         prediction = model.predict(np.expand_dims(image, axis=0))
         number_char = round(prediction[0][0])
+        
+        if number_char > 6:
+            number_char = 6
         
         return number_char
 
@@ -66,7 +69,7 @@ def main():
         
         categories = ['#','%','+','-','0','1','2','3','4','5','6','7','8','9',"'",':','A','B','D','F','M','P','Q','R','T','U','V','W','X','Y','Z','[','\\',']','c','e','g','h','j','k','n','s','{','}']
         
-        image = cv2.imread(image)
+        image = cv2.imread(os.path.join(args.filespath,image))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image = image / 255.0
         image = np.array(image)
@@ -79,8 +82,7 @@ def main():
             
         return name
 
-    path = os.path.abspath(args.filespath)
-    list_images = os.listdir(path)
+    list_images = os.listdir(args.filespath)
 
     model_nchar = load_model(args.model_number_path)
     char1_model = load_model(args.model1_path)
@@ -95,6 +97,7 @@ def main():
     file_predictions = []
 
     for file in list_images:
+        print(file)
         number_char = number_characters(model_nchar, file)
         file_predictions.append(character_prediction(file, list_models, number_char))
 
