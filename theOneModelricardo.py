@@ -278,10 +278,13 @@ def hugeCaptchaArray():
 
 def main():
 
+#python theOneModelricardo.py --data_dir=trainvalues1ch/ --batch_size=64 --epochs=25 --model_index=1 --validation_split=0.2
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', help='select input directory for training set', type=int)
     parser.add_argument('--batch_size', help='select batch size', type=int)
     parser.add_argument('--epochs', help='select number of epochs', type=int)
+    parser.add_argument('--model_index', help='select what character index you want the model to predict', type=int)
+    parser.add_argument('--validation_split', help='select what percent of the input data will be set aside for validation', type=int)
 
 
     args = parser.parse_args()
@@ -295,24 +298,42 @@ def main():
         exit(1)
 
     if args.epochs is None:
-        print("select input directory for training set")
+        print("select number of epochs")
         exit(1)
 
+    if args.model_index is None:
+        print("select what character index you want the model to predict")
+        exit(1)
+
+    if args.validation_split is None:
+        print("select what percent of the input data will be set aside for validation")
+        exit(1)
+
+    directory = f'trainvalues{args.model_index}ch'
+    train = trainingData(args.data_dir)
     
+    for i in range(len(train)): 
+        random.shuffle(train[i])
+
+    #list of list implementation
+
+    X,Y,shape = smallerCaptchaArray((args.model_index-1))
+
+    first_model = createModelComplex(X, shape, 45)
+    batch_size = 64
+
+    print(f'traing model {args.model_index}')
+
+    first_model.fit(X, Y, epochs=25, batch_size=arg.sbatch_size, validation_split=0.2, callbacks=[keras.callbacks.ModelCheckpoint("ch1-e{epoch}.h5", save_best_only=True)])
+
+    first_model.save(f'character{args.model_index}.h5')
 
 if __name__ == '__main__':
    
     #main()
 
-    '''
-    to do:
 
-        add data_directory to initialise dir
-        add batch_size
-        add validation_split
-        add epochs
-    
-    '''
+    #Debugging
     model_num = 1
 
     directory = f'trainvalues{model_num}ch'
