@@ -9,6 +9,8 @@ import argparse
 
 def main():
     
+    # ./final_predictions.py --filespath file_captchas --model-number-path charcount_model.h5 
+    # --model1-path ch2-e25-81.h5 --model2-path ch2-e25-81.h5 --model3-path ch2-e25-81.h5 --model4-path ch2-e25-81.h5 --model5-path character5complex.h5 --model6-path character6complex.h5
     parser = argparse.ArgumentParser()
     parser.add_argument('--filespath', help='File with the images to use', type=str)
     parser.add_argument('--model-number-path', help='Path of the prediction model of number of char', type=str)
@@ -100,14 +102,20 @@ def main():
         print(file)
         number_char = number_characters(model_nchar, file)
         file_predictions.append(character_prediction(file, list_models, number_char))
+        print(file_predictions)
 
-    df = pd.DataFrame()
+    df = pd.DataFrame(columns=['filename', 'prediction'])
     df['filename'] = list_images
     df['prediction'] = file_predictions
+    
+    df2 = pd.DataFrame(list_images,columns=['filename'])
+    df3 = pd.DataFrame(file_predictions, columns=['prediction'])
+    
 
     df = df.sort_values(by= 'filename')
-    df.to_csv('predictionsP2.csv', sep=',')   
-     
+    df.to_csv('predictionsP2.csv', sep=',', index=False)   
+    df2.to_csv('filename.csv', index=False)
+    df3.to_csv('predictions.csv', index=False)     
     
 if __name__ == '__main__':
     main()
