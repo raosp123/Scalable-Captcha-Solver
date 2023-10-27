@@ -147,7 +147,7 @@ def smallerCaptchaArray(index):
     X = numpy.array(X)
     y = numpy.array(y)
 
-    Y= numpy.zeros((40000,45))
+    Y= numpy.zeros((40000,44))
 
     print(y.shape)
     #y_new = y.reshape(5,4000,44)
@@ -211,7 +211,7 @@ def main():
 
     X,Y,shape = smallerCaptchaArray((args.model_index-1))
 
-    first_model = createModelComplex(X, shape, 45)
+    first_model = createModelComplex(X, shape, 44)
     batch_size = 64
 
     print(f'traing model {args.model_index}')
@@ -226,7 +226,7 @@ if __name__ == '__main__':
 
 
     #Debugging
-    model_num = 1
+    model_num = 4
 
     directory = f'trainvalues{model_num}ch'
     train = trainingData(directory)
@@ -238,11 +238,11 @@ if __name__ == '__main__':
 
     X,Y,shape = smallerCaptchaArray((model_num-1))
 
-    first_model = createModelComplex(X, shape, 45)
+    first_model = createModelComplex(X, shape, 44)
     batch_size = 64
 
     print(f'traing model {model_num}')
 
-    first_model.fit(X, Y, epochs=25, batch_size=batch_size, validation_split=0.2, callbacks=[keras.callbacks.ModelCheckpoint("ch1-e{epoch}.h5", save_best_only=True)])
+    first_model.fit(X, Y, epochs=35, batch_size=batch_size, validation_split=0.2, callbacks=[keras.callbacks.ModelCheckpoint("ch1-e{epoch}.h5")])
 
     first_model.save(f'character{model_num}.h5')
