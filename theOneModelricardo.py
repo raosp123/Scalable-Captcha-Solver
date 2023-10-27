@@ -73,62 +73,6 @@ def trainingData(directory):
                 h = h+1
 
     return train
-
-#each input needs to be a grayscale for each pixel, so width * height * 1
-def preProcessData(directory, width, height, captcha_symbols):
-
-    #get list of files
-    file_list = os.listdir(directory) #list of files in directory
-    files = dict(zip(map(lambda x: x.split('.')[0], file_list), file_list)) #dict where the key is the label, and the value is the png
-
-    #create X and Y for train/testing
-    captcha_length = 6
-    num_images = (len([name for name in os.listdir(directory)]))
-
-    encoding_dict = {l:e for e,l in enumerate(captcha_symbols)}
-    del encoding_dict['\n']
-    decoding_dict = {e:l for l,e in encoding_dict.items()}
-
-    print(encoding_dict)
-
-    X = numpy.zeros((num_images, height, width)) #num of images, of height and width, with value each (grayscale)
-    y = numpy.zeros((num_images, 43, 6))
-    
-
-    #temp = numpy.zeros((43, 5))#hold the one hot encoded 43*5 values before flattening
-
-    for i, file_label in enumerate(files):
-        
-        file = files[file_label] 
-        file_label = filename_format(reverse_dict, file_label)
-
-        raw_data = cv2.imread(os.path.join(directory, file))
-        gray_data = cv2.cvtColor(raw_data, cv2.COLOR_BGR2GRAY)
-        gray_data = gray_data / 255.0
-
-        #print(gray_data[0][0])
-
-        # print(X[i][0])
-        # print(gray_data[0])
-
-
-        X[i] = gray_data
-
-        for j, ch in enumerate(file_label):
-            #print(y[i][j, :])
-            y[i][encoding_dict[ch], j] = 1
-            #print(y[i][j])
-
-        #y[i] = temp.reshape(-1)
-
-
-    #print(captcha_symbols.find('P'))
-    #print(list(files)[0])
-
- 
-    #print(numpy.shape(y[0][0]))
-
-    return X, y
     
 # converts the filename back to character form
 def filename_format(dictionary, filename):
@@ -190,22 +134,6 @@ def createModelComplex(trainX, shape, num_classes):
     
     return model
 
-def splitY(trainY, num_images, captcha_len):
-
-    trainYs = numpy.zeros((captcha_len, num_images, 43)) # there are 5 trainYs, the first one corresponds to 2000 images and the value for each character
-    temp = numpy.zeros((num_images, captcha_len, 43))
-    #trin y = 39999, 43, 5
-
-    for i in range(num_images):
-        
-        temp[i] = trainY[i].transpose()
-
-
-    # for i in range(captcha_len):
-    #     for j in range(num_images):
-    #         trainYs[i][j] = trainY[j].transpose()[i]
-
-    return temp
 
 def smallerCaptchaArray(index):
     X = []
@@ -239,42 +167,6 @@ def smallerCaptchaArray(index):
     shape = (len(X[0]), len(X[0][0]), 1)
 
     return X, Y, shape
-
-def hugeCaptchaArray():
-
-    X=[]
-    y=[]
-
-    for i in range(6):
-        X.append([])
-        y.append([])
-
-    for i in range(len(train)):
-        for features, label in train[i]:
-            X[i].append(features)
-            y[i].append(label)
-
-    for i in range(len(train)):
-        print(len(X[i]))
-        
-    #print(numpy.array(X).shape)
-  
-    X = numpy.array(X)
-    y = numpy.array(y)
-
-    Y= numpy.zeros((6,40000,45))
-    print(y.shape)
-    #y_new = y.reshape(5,4000,44)
-
-    for i in range(len(X)):
-        X[i].reshape(-1, 64, 128, 1)
-        Y[i] = to_categorical(y[i])
-
-    # with numpy.printoptions(threshold=numpy.inf):
-    #     print(Y[0])
-    X=X.astype('float32')
-
-    shape = (len(X[0][0]), len(X[0][0][0]), 1)
 
 def main():
 
@@ -324,7 +216,7 @@ def main():
 
     print(f'traing model {args.model_index}')
 
-    first_model.fit(X, Y, epochs=25, batch_size=arg.sbatch_size, validation_split=0.2, callbacks=[keras.callbacks.ModelCheckpoint("ch1-e{epoch}.h5", save_best_only=True)])
+    first_model.fit(X, Y, epochs=25, batch_size=args.batch_size, validation_split=0.2, callbacks=[keras.callbacks.ModelCheckpoint("ch1-e{epoch}.h5", save_best_only=True)])
 
     first_model.save(f'character{args.model_index}.h5')
 
