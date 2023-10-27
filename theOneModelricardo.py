@@ -155,7 +155,7 @@ def createModel(trainX, shape, num_classes):
     model.add(Conv2D(128, (2, 2), activation='relu'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D((2, 2)))
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.5))
     model.add(Flatten())
     
     model.add(Dense(128, activation='relu', kernel_regularizer=regularizers.l2(0.001)))
@@ -165,7 +165,6 @@ def createModel(trainX, shape, num_classes):
     model.summary()
     
     return model
-
 
 def createModelComplex(trainX, shape, num_classes):
 
@@ -277,49 +276,60 @@ def hugeCaptchaArray():
 
     shape = (len(X[0][0]), len(X[0][0][0]), 1)
 
+def main():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_dir', help='select input directory for training set', type=int)
+    parser.add_argument('--batch_size', help='select batch size', type=int)
+    parser.add_argument('--epochs', help='select number of epochs', type=int)
+
+
+    args = parser.parse_args()
+
+    if args.data_dir is None:
+        print("select input directory for training set")
+        exit(1)
+
+    if args.batch_size is None:
+        print("select batch size")
+        exit(1)
+
+    if args.epochs is None:
+        print("select input directory for training set")
+        exit(1)
+
+    
+
 if __name__ == '__main__':
    
-    directory = 'trainvalues'
+    #main()
 
-    with open('symbols.txt') as symbols_file:
-        captcha_symbols = symbols_file.readline()
+    '''
+    to do:
 
-    num_images = (len([name for name in os.listdir(directory)]))
+        add data_directory to initialise dir
+        add batch_size
+        add validation_split
+        add epochs
+    
+    '''
+    model_num = 1
 
-    # file_list = os.listdir('trainvaluesfixed/')    
-    test = ['#','%','+','-','0','1','2','3','4','5','6','7','8','9',"'",':','A','B','D','F','M','P','Q','R','T','U','V','W','X','Y','Z','[','\\',']','c','e','g','h','j','k','n','s','{','}']
-
-    #print(test.index('\\'))
-    # trainX, trainY = preProcessData(directory, 128, 64, captcha_symbols)
-
-    # print(trainY.shape)
-
-    # trainYs = splitY(trainY, num_images=len(trainX), captcha_len=5)
-
-
-
-    # #trainY = trainY.reshape(num_images, 43 * 5)
-
-    # print(trainYs.shape)
-
+    directory = f'trainvalues{model_num}ch'
     train = trainingData(directory)
     
     for i in range(len(train)): 
         random.shuffle(train[i])
-    #print(train)
 
     #list of list implementation
 
-    X1,Y1,shape = smallerCaptchaArray(1)
-    # # #print(f'The input image is {trainX[0]} and the output associated is {trainYs[0][0]}')
+    X,Y,shape = smallerCaptchaArray((model_num-1))
 
-    first_model = createModelComplex(X1, shape, 45)
-    # print(Y[0].shape)
-    # print(X[0].shape)
-    # # second_model = create_model(5, 43, shape)
+    first_model = createModelComplex(X, shape, 45)
     batch_size = 64
 
+    print(f'traing model {model_num}')
 
-    first_model.fit(X1, Y1, epochs=20, batch_size=batch_size, validation_split=0.2, callbacks=[keras.callbacks.ModelCheckpoint("best model at epoch:{epoch}.h5", save_best_only=True)])
+    first_model.fit(X, Y, epochs=25, batch_size=batch_size, validation_split=0.2, callbacks=[keras.callbacks.ModelCheckpoint("ch1-e{epoch}.h5", save_best_only=True)])
 
-    first_model.save('character2complex.h5')
+    first_model.save(f'character{model_num}.h5')
