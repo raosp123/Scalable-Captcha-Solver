@@ -41,7 +41,7 @@ y_train = []
 for filename in images:
     image_path = os.path.join(path, filename)
     img = cv2.imread(image_path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     X_train.append(img)
     if filename.endswith('.png'):
        captcha_text = os.path.splitext(filename)[0]
@@ -51,7 +51,7 @@ for filename in images:
 X_train = np.array(X_train)
 y_train = np.array(y_train)
 X_train = X_train / 255.0
-X_train = X_train.reshape(X_train.shape[0], 64, 128, 3)
+X_train = X_train.reshape(X_train.shape[0], 64, 128, 1)
     
 
 
@@ -67,16 +67,16 @@ def create_char_count_model(input_shape):
     model.add(Dense(128, activation='relu'))
     model.add(Dense(1, activation='linear'))  # Output a single number for character count prediction
 
-    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])  # Use mean squared error for regression
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mse'])  # Use mean squared error for regression
     return model
 
 num_epochs = 20
 batch_size = 40
 # train model
-input_shape = (64,128,3)
+input_shape = (64,128,1)
 model_char_count = create_char_count_model(input_shape)
 model_char_count.summary()
-model_char_count.fit(X_train, y_train, epochs=num_epochs, batch_size=batch_size)
+model_char_count.fit(X_train, y_train, epochs=num_epochs, batch_size=batch_size, validation_split=0.2)
 
 # save the model
-model_char_count.save('char_count_model.h5')
+model_char_count.save('charcount_model.h5')
