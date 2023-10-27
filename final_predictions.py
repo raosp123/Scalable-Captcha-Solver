@@ -69,7 +69,7 @@ def main():
 
     def character_prediction(image, list_models, number_char):
         
-        categories = ['#','%','+','-','0','1','2','3','4','5','6','7','8','9',"'",':','A','B','D','F','M','P','Q','R','T','U','V','W','X','Y','Z','[','\\',']','c','e','g','h','j','k','n','s','{','}']
+        categories = ['#','%','+','-','0','1','2','3','4','5','6','7','8','9',"'",':','A','B','D','F','M','P','Q','R','T','U','V','W','X','Y','Z','[','\\',']','c','e','g','h','j','k','n','s','{','}','&']
         
         image = cv2.imread(os.path.join(args.filespath,image))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -99,7 +99,6 @@ def main():
     file_predictions = []
 
     for file in list_images:
-        print(file)
         number_char = number_characters(model_nchar, file)
         file_predictions.append(character_prediction(file, list_models, number_char))
         print(file_predictions)
@@ -113,7 +112,7 @@ def main():
     
 
     df = df.sort_values(by= 'filename')
-    df.to_csv('predictionsP2.csv', sep=',', index=False)   
+    df.to_csv('predictionsP2.csv', sep=',', index=False, header=None)   
     df2.to_csv('filename.csv', index=False)
     df3.to_csv('predictions.csv', index=False)     
     
