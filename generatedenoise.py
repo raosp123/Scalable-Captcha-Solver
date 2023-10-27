@@ -23,7 +23,7 @@ symbol_to_code = {
     ':':'colon'
 }
 
-#python3 generatedenoise.py --width=128 --height=64 --count=2000 --output-dir='trainvaluesfixed/' --symbols='symbols.txt' --fontpath='EamonU.ttf' --captcha-length=5
+#python3 generatedenoise.py --width=128 --height=64 --count=4000 --output-dir='trainvalues3ch/' --symbols='symbols.txt' --fontpath='EamonU.ttf' --captcha-range=(3,6)
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--width', help='Width of captcha image', type=int)
@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--output-dir', help='Where to store the generated captchas', type=str)
     parser.add_argument('--symbols', help='File with the symbols to use in captchas', type=str)
     parser.add_argument('--fontpath', help='Path where the font style is saved', type=str)
-    parser.add_argument('--captcha-range', help='range of captcha you define (x,y)', type=str)
+    parser.add_argument('--captcha-range', help='range of captcha you define x,y', type=str)
     args = parser.parse_args()
 
     if args.width is None:
@@ -60,12 +60,17 @@ def main():
         exit(1)
 
     if args.captcha_range is None:
-        print("Please specify the captcha range, in format (x,y)")
+        print("Please specify the captcha range, in format x,y")
+
+
         exit(1)
 
     captcha_generator = imagedenoise.ImageCaptcha(width=args.width, height=args.height, fonts=[args.fontpath])
     
     
+    high = (args.captcha_range).split(",")[0]
+    low = (args.captcha_range).split(",")[1]
+
     symbols_file = open(args.symbols, 'r')
     captcha_symbols = symbols_file.readline().strip()
     symbols_file.close()
@@ -81,9 +86,9 @@ def main():
     while True:
         # random length for the captchas between 1 and 6
         num_images = sum(1 for _ in os.scandir(args.output_dir) if _.is_file())
-        
+
         if num_images < args.count:
-            length = random.randint(args.captcha_range) #uncomment if you want range of lengths
+            length = random.randint(high,low) #uncomment if you want range of lengths
             random_str = ''.join([random.choice(captcha_symbols) for j in range(length)])
             im = captcha_generator.generate_image(random_str)
             image1 = numpy.array(im[0])
