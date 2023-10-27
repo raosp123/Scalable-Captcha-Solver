@@ -59,7 +59,7 @@ def main():
         print("Please specify the path of the fonts file")
         exit(1)
 
-    if args.captha_range is None:
+    if args.captcha_range is None:
         print("Please specify the captcha range, in format (x,y)")
         exit(1)
 
